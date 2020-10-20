@@ -12,5 +12,6 @@ function getUrl() {
 const API_URL = getUrl();
 
 export default {
-  POSTS_URL: API_URL + 'posts'
+  POSTS_URL: API_URL + 'posts',
+  COMMENTS_URL: API_URL + 'comments'
 }

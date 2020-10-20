@@ -54,6 +54,87 @@
           </v-btn>
         </router-link>
       </v-card-actions>
+
+      <div class="mt-5">
+        <span class="ml-4">
+          <v-bottom-sheet
+            v-model="postCommentsVisible"
+            inset
+            max-width="50%"
+            scrollable
+          >
+            <template v-slot:activator="{ on }">
+              <v-btn v-on="on">
+                <v-icon left dark x-small>mdi-comment-plus-outline</v-icon>
+                Post Comment
+              </v-btn>
+            </template>
+
+            <v-sheet height="320px" class="px-4 py-3">
+              <v-form ref="commentsForm" v-model="valid" lazy-validation>
+                <v-text-field
+                  v-model="commentsForm.name"
+                  :counter="15"
+                  label="First name"
+                  required
+                  :rules="rules.name"
+                >
+                </v-text-field>
+                <v-textarea
+                  v-model="commentsForm.comment"
+                  label="Comment"
+                  autofocus
+                  auto-grow
+                  :rules="rules.comment"
+                >
+                </v-textarea>
+                <br />
+                <v-btn
+                  color="deep-purple accent-4"
+                  dark
+                  block
+                  :loading="btnLoading"
+                  >Post</v-btn
+                >
+              </v-form>
+            </v-sheet>
+          </v-bottom-sheet>
+        </span>
+        <span style="float:right" class="white--text mr-2"
+          >{{ post.comments.length }} comments</span
+        >
+
+        <br />
+        <div v-if="!commentsEmpty">
+          <v-timeline
+            dense
+            v-for="(comment, index) in post.comments"
+            :key="index"
+          >
+            <v-timeline-item>
+              <template v-slot:icon>
+                <v-avatar color="pink">
+                  <span class="white--text headline">{{
+                    comment.alphabet
+                  }}</span>
+                </v-avatar>
+              </template>
+
+              <v-card class="elevation-2">
+                <v-card-title class="headline">{{ comment.name }}</v-card-title>
+                <v-card-text>
+                  {{ comment.comment }}
+                </v-card-text>
+              </v-card>
+            </v-timeline-item>
+          </v-timeline>
+        </div>
+        <div v-else class="mt-5 mb-5">
+          <h4 style="text-align: center" class="white--text">
+            No comments
+          </h4>
+        </div>
+      </div>
     </v-card>
   </div>
 </template>
@@ -61,16 +142,37 @@
 <script>
 import Vue from 'vue';
 import postService from '@/api/posts';
+import commentsService from '@/api/comments';
 Vue.use(require('vue-moment'));
 
 export default {
   name: 'post',
   data() {
     return {
+      postCommentsVisible: false,
+      valid: true,
+      btnLoading: false,
       transition: 'slide-y-reverse-transition',
       share: true,
       post: {},
+      commentsForm: {
+        name: '',
+        comment: '',
+      },
+      rules: {
+        name: [
+          (v) => !!v || 'Name field is required',
+          (v) => v.length > 15 || 'Name should be less than 15 characters',
+        ],
+        comment: [(v) => !!v || 'Comment field is required'],
+      },
     };
+  },
+  computed: {
+    commentsEmpty: function() {
+      let c = this.post.comments;
+      return !Array.isArray(c) || !c.length;
+    },
   },
   created() {
     this.getPost(this.$route.query.id);
